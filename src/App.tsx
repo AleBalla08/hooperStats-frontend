@@ -1,68 +1,70 @@
-import './comps_styles/appStyles.css';
-import TopMenu from './components/topMenu';
-import CreateSession from './components/createSession';
-import Sessions from './components/sessions';
-import CreateGoal from './components/createGoal';
-import Goals from './components/goals';
-import { useEffect, useState } from 'react';
-import { Session, Goal } from './components/types';
-import { TimerProvider } from './singleSession/SScomps/timerContexts';
+import { useEffect, useState } from "react";
+import { TimerProvider } from "./TimerContext";
+import TopMenu from "./components/TopMenu";
+import CreateSession from "./components/CreateSession";
+import Sessions from "./components/Sessions";
+import CreateGoal from "./components/CreateGoal";
+import Goals from "./components/Goals";
+import { Session } from "react-router-dom";
 
 function App() {
-    const [sessions, setSessions] = useState<Session[]>(() => {
-        const savedSessions = JSON.parse(localStorage.getItem("sessions") || "[]");
-        return savedSessions;
-    });
+    const [sessions, setSessions] = useState<Session[]>([]);
+    const [goals, setGoals] = useState<Goal[]>([]);
 
-    const [goals, setGoals] = useState<Goal[]>(() => {
-        const storedGoals = localStorage.getItem("goals");
-        return storedGoals ? JSON.parse(storedGoals) : [];
-    });
+    async function fetchSessions(){
+        const res = await fetch("http://127.0.0.1:8000/api/list-sessions/")
+        const data = await res.json();
+        setSessions(data);
+    }
+
+    async function createSession(session: Session) {
+        await fetch("https://127.0.0.1:8000/api/create-session/", {
+            method: 'POST',
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(session)
+        });
+        setSessions(prev => [...prev, session])
+    }
+
+    async function editSession(id: string, updatedSession:Session) {
+        try {
+            const res = await fetch(`http://127.0.0.1:8000/api/edit-session/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(updatedSession),
+            });
+
+            if (!res.ok) {
+                throw new Error('Failed to update session');
+            }
+
+            const data = await res.json();
+            return data;
+        } catch (error) {
+            console.error('Error editing session.', error)
+            throw error;
+        }
+            
+    }
+    
+    async function removeSession(id: string) {
+        await fetch(`http://127.0.0.1:8000/api/edit-session/${id}`, { method: "DELETE" });
+        setSessions(prev => prev.filter(s => s.id !== id));
+    }
 
     useEffect(() => {
-        localStorage.setItem("goals", JSON.stringify(goals));
-    }, [goals]);
+        fetchSessions();
+    }, []);
 
-    useEffect(() => {
-        localStorage.setItem("sessions", JSON.stringify(sessions));
-    }, [sessions]);
 
-    function addSession(session: Session) {
-        setSessions([...sessions, session]);
-    }
-
-    function removeSessions(id: string) {
-        const newSessions = sessions.filter(session => session.id !== id);
-        setSessions(newSessions);
-    }
-
-    function addGoal(goalName: string, checked: boolean) {
-        const newGoal = [...goals, { name: goalName, checked }];
-        setGoals(newGoal);
-    }
-
-    function removeGoal(index: number) {
-        const newGoals = goals.filter((_, i) => i !== index);
-        setGoals(newGoals);
-    }
-
-    function toggleGoal(index: number) {
-        const updatedGoals = goals.map((goal, i) =>
-            i === index ? { ...goal, checked: !goal.checked } : goal
-        );
-        setGoals(updatedGoals);
-    }
-
-    function removeCheckedGoals(): void {
-        const newGoals = goals.filter(goal => !goal.checked);
-        setGoals(newGoals);
-    }
 
     return (
         <>
             <TimerProvider>
                 <TopMenu />
-                <CreateSession addSession={addSession} />
+                <CreateSession addSession={createSession} />
                 <Sessions sessions={sessions} removeSessions={removeSessions} />
                 <CreateGoal addGoal={addGoal} />
                 <Goals goals={goals} removeGoal={removeGoal} toggleGoal={toggleGoal} />
