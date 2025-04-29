@@ -1,7 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import './index.css';
-import { HashRouter as Router, Routes, Route } from 'react-router-dom'; 
+import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom'; 
 import App from './App';
 import SingleSession from './singleSession/singleSession';
 import Profile from './profile/profile';
@@ -21,15 +21,17 @@ const Main = () => {
       <Routes>
         {!authenticated ? (
           <>
-            <Route path="*" element={<Register />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            <Route path="*" element={<Navigate to="/login" />} />
           </>
         ) : (
           <>
             <Route path="/" element={<App />} />
-            <Route path="/login" element={<Login/>}/>
             <Route path="/singleSession/:sessionId" element={<SingleSession />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/workouts" element={<DoneSessions />} />
+            <Route path="*" element={<Navigate to="/" />} />
           </>
         )}
       </Routes>
