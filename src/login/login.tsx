@@ -40,9 +40,10 @@ function Login(){
             setMessage((err as Error).message);
         }
     };
-    
-
-
+  
+    function sendToRegister (){
+      navigate('/register')
+    }
 
     return (
         <>
@@ -65,7 +66,7 @@ function Login(){
               required
             />
             <button type="submit">Logar</button>
-            <p>Ainda não é registrado? faça o <strong>Registro</strong></p>
+            <p>Ainda não é registrado? faça o <strong onClick={sendToRegister}>Registro</strong></p>
             {message && <p style={{ color: "orange" }}>{message}</p>}
 
           </form>

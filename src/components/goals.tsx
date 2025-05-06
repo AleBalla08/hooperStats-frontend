@@ -4,8 +4,8 @@ import { Goal } from './types';
 
 interface GoalsProps {
     goals: Goal[];
-    removeGoal: (index: number) => void;
-    toggleGoal: (index: number) => void;
+    removeGoal: (id: string) => void;
+    toggleGoal: (id: string, checked: boolean) => void;
 }
 
 function Goals({ goals, removeGoal, toggleGoal }: GoalsProps) {

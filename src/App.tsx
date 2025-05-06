@@ -10,16 +10,28 @@ import { Goal, Session } from "./components/types";
 
 function App() {
     const [sessions, setSessions] = useState<Session[]>([]);
-    const [goals, setGoals] = useState<Goal[]>([]);
+    const [goals, setGoals] = useState<Goal[]>([]); 
+    const access_token = localStorage.getItem('access_token');
+
+    const authHeader = {
+        'Content-Type' : 'application/json',
+        'Authorization' : `Bearer ${access_token}`
+    }
 
     async function fetchSessions(){
-        const res = await fetch("http://127.0.0.1:8000/api/list-sessions/")
+        const res = await fetch("http://127.0.0.1:8000/api/list-sessions/", {
+            headers: {
+                "Authorization": `Bearer ${access_token}`
+            }
+        })
         const data = await res.json();
         setSessions(data);
     }
 
     async function fetchGoals(){
-        const res = await fetch("http://127.0.0.1:8000/api/list-goals/")
+        const res = await fetch("http://127.0.0.1:8000/api/list-goals/", {
+            headers : authHeader
+        })
         const data = await res.json()
         setGoals(data)
     }
@@ -27,7 +39,7 @@ function App() {
     async function createSession(session: Session) {
         await fetch("http://127.0.0.1:8000/api/create-session/", {
             method: 'POST',
-            headers: { "Content-Type": "application/json" },
+            headers: authHeader,
             body: JSON.stringify(session)
         });
         setSessions(prev => [...prev, session])
@@ -42,7 +54,7 @@ function App() {
       
         await fetch("http://127.0.0.1:8000/api/create-goal/", {
           method: 'POST',
-          headers: {"Content-Type": "application/json"},
+          headers: authHeader,
           body: JSON.stringify(newGoal)
         });
       
@@ -50,21 +62,19 @@ function App() {
     }
 
     async function removeSession(id: string) {
-        await fetch(`http://127.0.0.1:8000/api/remove-session/${id}`, { method: "DELETE" });
+        await fetch(`http://127.0.0.1:8000/api/remove-session/${id}`, { method: "DELETE", headers : authHeader });
         setSessions(prev => prev.filter(s => s.id !== id));
     }
 
-    async function removeGoal(id: string) {
-        await fetch(`http://127.0.0.1:8000/api/edit-goal/${id}`, {method: 'DELETE'});
+    async function removeGoal(id: string): Promise<void> {
+        await fetch(`http://127.0.0.1:8000/api/edit-goal/${id}`, {method: 'DELETE', headers:authHeader});
         setGoals(prev => prev.filter(s => s.id !== id ))
     }
 
     async function toggleGoal(id: string, checked: boolean) {
         await fetch(`http://127.0.0.1:8000/api/edit-goal/${id}`, {
             method: 'PATCH',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: authHeader,
             body: JSON.stringify({ id, checked })
         });
     }
@@ -72,7 +82,8 @@ function App() {
     async function removeCheckedGoals() {
         try {
             const res = await fetch('http://127.0.0.1:8000/api/clear-checked-goals/', {
-                method: 'DELETE'
+                method: 'DELETE',
+                headers: authHeader
             });
             
             if (!res.ok) {
