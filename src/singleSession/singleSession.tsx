@@ -27,51 +27,145 @@ function SingleSessionContent() {
   const [makes, setMakes] = useState<string>("");
   const { time, stopTimer } = useTimer(); 
   const navigate = useNavigate();
+  const access_token = localStorage.getItem('access_token');
 
-  useEffect(() => {
-    const savedSessions = JSON.parse(localStorage.getItem("sessions") || "[]");
-    const foundSession = savedSessions.find((s: Session) => s.id === sessionId);
-    setSession(foundSession || null);
-  }, [sessionId]);
+  async function fetchSessionDataAgain() {
+    if (!access_token || !sessionId) return;
+    
+    const res = await fetch(`http://127.0.0.1:8000/api/sessions/${sessionId}/`, {
+      headers: {
+        "Authorization": `Bearer ${access_token}`,
+        "Content-Type": "application/json"
+      }
+    });
+  
+    if (res.ok) {
+      const data = await res.json();
+      setSession(data);
+    }
+  }
+  
+  useEffect(()=>{
+    async function getSession(){
+      if (!access_token) {
+        console.error('Token não encontrado')
+        return
+      }
 
-  function addExercise() {
+      try {
+        const res = await fetch(`http://127.0.0.1:8000/api/session/${sessionId}/`, {
+          headers: {
+            "Authrization" : `Bearer ${access_token}`,
+            "Content-Type" : "application/json"
+          }
+        });
+
+        if (!res.ok) {
+          console.error('Sessão Não Encontrada.')
+          return
+        }
+
+        const data = await res.json()
+        setSession(data)
+      } catch (err) {
+        console.error('Erro: ', err)
+      }
+    }
+
+    getSession()
+
+
+  }, [sessionId, access_token])
+
+
+  async function addExercise(){
     if (!session || !exerciseName.trim()) return;
 
-    const newExercise: Exercise = {
-      checked: false,
-      name: exerciseName,
-      reps: Number(reps),
-      makes: Number(makes),
-      percentage: reps && makes ? Math.round((Number(makes) / Number(reps)) * 100) : 0,
-    };
+    const access_token = localStorage.getItem("access_token");
 
-    const updatedSession: Session = {
-      ...session,
-      exercises: [...session.exercises, newExercise],
-    };
+    if (!access_token) {
+      console.error("Token de acesso não encontrado");
+      return;
+    }
 
-    const savedSessions: Session[] = JSON.parse(localStorage.getItem("sessions") || "[]");
-    const updatedSessions = savedSessions.map((s) => (s.id === sessionId ? updatedSession : s));
+    try {
+      const res = await fetch(`http://127.0.0.1:8000/api/create-exercise/`, {
+        method: 'POST',
+        headers: {
+            "Authrization" : `Bearer ${access_token}`,
+            "Content-Type" : "application/json"
+        },
+        body: JSON.stringify({
+          name: exerciseName,
+          reps: Number(reps),
+          session_id: session.id
+        })
+      });
 
-    localStorage.setItem("sessions", JSON.stringify(updatedSessions));
-    setSession(updatedSession);
+      const data = await res.json();
 
-    setExerciseName("");
-    setReps("");
-    setMakes("");
+      if (!res.ok) {
+        console.error('Erro ao criar exercicio', data)
+        return;
+      }
+
+      await fetchSessionDataAgain();
+
+      setExerciseName("");
+      setReps("");
+      setMakes("");
+
+    } catch (err) {
+      console.error('erro', err)
+    }
+
   }
 
-  function deleteExercise(sessionId: string, exerciseIndex: number) {
+  // function deleteExercise(sessionId: string, exerciseIndex: number) {
+  //   if (!session) return;
+  //   const updatedExercises = session.exercises.filter((_, index) => index !== exerciseIndex);
+  //   const updatedSession = { ...session, exercises: updatedExercises };
+
+  //   const savedSessions: Session[] = JSON.parse(localStorage.getItem("sessions") || "[]");
+  //   const updatedSessions = savedSessions.map((s) => (s.id === sessionId ? updatedSession : s));
+
+  //   localStorage.setItem("sessions", JSON.stringify(updatedSessions));
+  //   setSession(updatedSession);
+  // }
+
+  async function deleteSession(id: number) {
     if (!session) return;
-    const updatedExercises = session.exercises.filter((_, index) => index !== exerciseIndex);
-    const updatedSession = { ...session, exercises: updatedExercises };
 
-    const savedSessions: Session[] = JSON.parse(localStorage.getItem("sessions") || "[]");
-    const updatedSessions = savedSessions.map((s) => (s.id === sessionId ? updatedSession : s));
+    const access_token = localStorage.getItem("access_token");
 
-    localStorage.setItem("sessions", JSON.stringify(updatedSessions));
-    setSession(updatedSession);
+    if (!access_token) {
+      console.error("Token de acesso não encontrado");
+      return;
+    }
+
+    try {
+      const res = await fetch(`http://127.0.0.1:8000/api/edit-exercise/${id}`, {
+        method: 'DELETE',
+        headers: {
+          "Authrization" : `Bearer ${access_token}`
+        }
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        console.log('Exercicio deletado com sucesso')
+        await fetchSessionDataAgain()
+      } else {
+        console.error('Erro ao deletar sessao', data.message)
+        return;
+      }
+    } catch (err) {
+      console.error('erro', err)
+    }
   }
+
+
 
   async function endExercise(sessionId: string, exerciseIndex: number) {
     if (!session) return;
@@ -237,7 +331,7 @@ function SingleSessionContent() {
                   type="checkbox"
                 />
                 <i className="fas fa-basketball-ball bball-check"></i>
-                <button className="remove__exer" onClick={() => deleteExercise(session.id, index)}>
+                <button className="remove__exer" onClick={() => deleteExercise(index)}>
                   <i className="fa-solid fa-trash-can"></i>
                 </button>
                 <button className="edit__exer">

@@ -10,16 +10,18 @@ interface SessionProps{
 function Sessions({sessions, removeSessions}:SessionProps){
 
 
-  const navigate = useNavigate();
+    const navigate = useNavigate();
 
-  const showSingleSession = (sessionId: string)=>{
-        navigate(`/singleSession/${sessionId}`)
-  }
+    const showSingleSession = (sessionId: string)=>{
+            navigate(`/singleSession/${sessionId}`)
+    }
+
+    console.log('sessions: ', sessions)
 
     return (
         <div className='div_sessions'>
             <ul className='sessions__container'>
-                {sessions.map((session, index) => (
+                {sessions ? sessions.map((session, index) => (
                     <li key={index} className='session__item'>
                     <p>{session.name}</p>
                     <div className='session__buttons'>
@@ -27,7 +29,7 @@ function Sessions({sessions, removeSessions}:SessionProps){
                         <button className='remove__session' onClick={() => removeSessions(session.id)}><i className="fa-solid fa-trash-can"></i></button>
                     </div>
                 </li>
-                ))}
+                )) : ""}
                 
             </ul>
         </div>
