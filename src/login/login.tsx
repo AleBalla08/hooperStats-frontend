@@ -7,6 +7,7 @@ function Login(){
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [message, setMessage] = useState<string | null>(null);
+    const [accessToken, setAccessToken] = useState<string | null>(null);
 
     const navigate = useNavigate();
 
@@ -19,11 +20,11 @@ function Login(){
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ username, password })
+                body: JSON.stringify({ username, password }),
+                credentials: 'include'
             });
     
             const responseText = await response.text();
-    
             console.log('Resposta da API:', responseText);
 
             if (!response.ok) {
@@ -31,8 +32,7 @@ function Login(){
             }
 
             const data = JSON.parse(responseText);
-    
-            localStorage.setItem('access_token', data.access_token);
+            setAccessToken(data.access_token)
             
             setMessage('Usuário logado com sucesso!');
             navigate('/profile');
