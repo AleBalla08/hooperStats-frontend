@@ -7,7 +7,6 @@ function Login(){
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [message, setMessage] = useState<string | null>(null);
-    const [accessToken, setAccessToken] = useState<string | null>(null);
 
     const navigate = useNavigate();
 
@@ -32,7 +31,7 @@ function Login(){
             }
 
             const data = JSON.parse(responseText);
-            setAccessToken(data.access_token)
+            localStorage.setItem('access_token', data.access_token);           
             
             setMessage('Usuário logado com sucesso!');
             navigate('/profile');
@@ -40,7 +39,7 @@ function Login(){
             setMessage((err as Error).message);
         }
     };
-  
+    
     function sendToRegister (){
       navigate('/register')
     }

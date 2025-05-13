@@ -7,11 +7,54 @@ import CreateGoal from "./components/createGoal.tsx";
 import Goals from "./components/goals.tsx";
 // import { Session } from "react-router-dom";
 import { Goal, Session } from "./components/types";
+import { useNavigate } from "react-router-dom";
 
 function App() {
     const [sessions, setSessions] = useState<Session[]>([]);
     const [goals, setGoals] = useState<Goal[]>([]); 
     const access_token = localStorage.getItem('access_token');
+
+    const navigate = useNavigate()
+
+    // teste requisicao abaixo
+    async function testAuthentication(){
+        const token = localStorage.getItem('access_token');
+        const res = await fetch("http://127.0.0.1:8000/api/protected/", {
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
+        });
+
+        if (res.status === 401) {
+            const refreshResponse = await fetch("http://127.0.0.1:8000/api/token/refresh/", {
+                method: 'POST',
+                credentials: 'include'
+            });
+
+            if (refreshResponse.ok) {
+                const {access_token: newToken } = await refreshResponse.json();
+                localStorage.setItem('access_token', newToken);
+
+                const retry = await fetch("http://127.0.0.1:8000/api/protected/", {
+                    headers: {
+                        'Authorization': `Bearer ${newToken}`
+                    }
+                });
+
+                const retryData = await retry.json();
+                console.log('Dados Refresh: ', retryData);
+
+            } else {
+                navigate('/login')
+            }
+
+
+        }
+    }
+
+    useEffect(()=>{
+        testAuthentication();
+    })
 
     const authHeader = {
         'Content-Type' : 'application/json',
