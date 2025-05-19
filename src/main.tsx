@@ -8,13 +8,10 @@ import Profile from './profile/profile';
 import Register from './login/register.tsx';
 import DoneSessions from './components/doneSessions'; 
 import Login from './login/login.tsx';
-
-const isAuthenticated = () => {
-  return !!localStorage.getItem('access_token');
-};
+import { useAuth, AuthProvider } from './authContext.tsx';
 
 const Main = () => {
-  const authenticated = isAuthenticated();
+  const authenticated = useAuth()
 
   return (
     <Router>
@@ -41,7 +38,9 @@ const Main = () => {
 
 
 createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <Main /> 
-  </StrictMode>
+  <AuthProvider>
+    <StrictMode>
+      <Main /> 
+    </StrictMode>
+  </AuthProvider>
 );

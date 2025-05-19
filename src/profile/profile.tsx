@@ -2,11 +2,13 @@ import './profile.css'
 import TopMenu from '../components/topMenu';
 import Dashboard from './porfile_comps/dashboard';
 import { useEffect, useState } from "react";
+// import { useAuth } from './AuthContext';
 
 
 function Profile() {
 
     const [lastDoneSession, setLastDoneSession] = useState<any | null>(null);
+    // const { setAuthenticated } = useAuth();
 
     useEffect(()=>{
         const getLastDoneSession = (): any | null => {

@@ -2,6 +2,7 @@ import TopMenu from "../components/topMenu";
 import "./login.css"
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../authContext';
 
 function Login(){
     const [username, setUsername] = useState('');
@@ -9,6 +10,7 @@ function Login(){
     const [message, setMessage] = useState<string | null>(null);
 
     const navigate = useNavigate();
+    const { setAuthenticated } = useAuth();
 
     const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -34,6 +36,7 @@ function Login(){
             localStorage.setItem('access_token', data.access_token);           
             
             setMessage('Usuário logado com sucesso!');
+            setAuthenticated(true);
             navigate('/profile');
         } catch (err) {
             setMessage((err as Error).message);

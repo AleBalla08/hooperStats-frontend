@@ -8,6 +8,7 @@ import Goals from "./components/goals.tsx";
 // import { Session } from "react-router-dom";
 import { Goal, Session } from "./components/types";
 import { useNavigate } from "react-router-dom";
+import { AuthProvider } from './authContext.tsx';
 
 function App() {
     const [sessions, setSessions] = useState<Session[]>([]);
@@ -15,6 +16,7 @@ function App() {
     const access_token = localStorage.getItem('access_token');
 
     const navigate = useNavigate()
+
 
     // teste requisicao abaixo
     async function testAuthentication(){
@@ -25,7 +27,7 @@ function App() {
             }
         });
 
-        if (res.status === 401) {
+        if (res.status === 403) {
             const refreshResponse = await fetch("http://127.0.0.1:8000/api/token/refresh/", {
                 method: 'POST',
                 credentials: 'include'
@@ -51,10 +53,6 @@ function App() {
 
         }
     }
-
-    useEffect(()=>{
-        testAuthentication();
-    })
 
     const authHeader = {
         'Content-Type' : 'application/json',
@@ -166,14 +164,18 @@ function App() {
     
     
     useEffect(() => {
-        fetchSessions();
-        fetchGoals();
+        // if (access_token) {
+            fetchSessions();
+            fetchGoals();
+            testAuthentication(); 
+        // }
     }, []);
 
 
 
     return (
         <>
+        <AuthProvider>
             <TimerProvider>
                 <TopMenu />
                 <CreateSession addSession={createSession} />
@@ -186,6 +188,7 @@ function App() {
                     </div>
                 )}
             </TimerProvider>
+        </AuthProvider>
         </>
     );
 }
