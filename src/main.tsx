@@ -11,12 +11,13 @@ import Login from './login/login.tsx';
 import { useAuth, AuthProvider } from './authContext.tsx';
 
 const Main = () => {
-  const authenticated = useAuth()
+  const authenticated = useAuth();
+  console.log('authenticated:', authenticated);
 
   return (
     <Router>
       <Routes>
-        {!authenticated ? (
+        {authenticated.authenticated === false ? (
           <>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />

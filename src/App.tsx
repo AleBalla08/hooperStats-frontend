@@ -164,11 +164,9 @@ function App() {
     
     
     useEffect(() => {
-        // if (access_token) {
-            fetchSessions();
-            fetchGoals();
-            testAuthentication(); 
-        // }
+        fetchSessions();
+        fetchGoals();
+        testAuthentication(); 
     }, []);
 
 
