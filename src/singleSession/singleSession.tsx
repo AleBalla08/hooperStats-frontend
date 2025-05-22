@@ -24,19 +24,59 @@ function SingleSessionContent() {
   const [session, setSession] = useState<Session | null>(null);
   const [exerciseName, setExerciseName] = useState<string>("");
   const [reps, setReps] = useState<string>("");
-  const [makes, setMakes] = useState<string>("");
+  // const [makes, setMakes] = useState<string>("");
   const { time, stopTimer } = useTimer(); 
   const navigate = useNavigate();
   const access_token = localStorage.getItem('access_token');
 
+  // teste requisicao abaixo
+    async function testAuthentication(){
+        const token = localStorage.getItem('access_token');
+        const res = await fetch("http://127.0.0.1:8000/api/protected/", {
+            headers: {
+                "Authorization": `Bearer ${token}`
+            }
+        });
+
+        if (res.status === 403) {
+            const refreshResponse = await fetch("http://127.0.0.1:8000/api/token/refresh/", {
+                method: 'POST',
+                credentials: 'include'
+            });
+
+            if (refreshResponse.ok) {
+                const {access_token: newToken } = await refreshResponse.json();
+                localStorage.setItem('access_token', newToken);
+
+                const retry = await fetch("http://127.0.0.1:8000/api/protected/", {
+                    headers: {
+                        'Authorization': `Bearer ${newToken}`
+                    }
+                });
+
+                const retryData = await retry.json();
+                console.log('Dados Refresh: ', retryData);
+
+            } else {
+                navigate('/login')
+            }
+
+
+        }
+    }
+
+    const authHeader = {
+        'Content-Type' : 'application/json',
+        'Authorization' : `Bearer ${access_token}`
+    }
+
+
+
   async function fetchSessionDataAgain() {
     if (!access_token || !sessionId) return;
     
-    const res = await fetch(`http://127.0.0.1:8000/api/sessions/${sessionId}/`, {
-      headers: {
-        "Authorization": `Bearer ${access_token}`,
-        "Content-Type": "application/json"
-      }
+    const res = await fetch(`http://127.0.0.1:8000/api/session/?id_session=${sessionId}`, {
+      headers: authHeader
     });
   
     if (res.ok) {
@@ -47,17 +87,16 @@ function SingleSessionContent() {
   
   useEffect(()=>{
     async function getSession(){
+      const access_token = localStorage.getItem("access_token");
+
       if (!access_token) {
         console.error('Token não encontrado')
         return
       }
 
       try {
-        const res = await fetch(`http://127.0.0.1:8000/api/session/${sessionId}/`, {
-          headers: {
-            "Authrization" : `Bearer ${access_token}`,
-            "Content-Type" : "application/json"
-          }
+        const res = await fetch(`http://127.0.0.1:8000/api/session/?id_session=${sessionId}`, {
+          headers: authHeader
         });
 
         if (!res.ok) {
@@ -91,10 +130,7 @@ function SingleSessionContent() {
     try {
       const res = await fetch(`http://127.0.0.1:8000/api/create-exercise/`, {
         method: 'POST',
-        headers: {
-            "Authrization" : `Bearer ${access_token}`,
-            "Content-Type" : "application/json"
-        },
+        headers: authHeader,
         body: JSON.stringify({
           name: exerciseName,
           reps: Number(reps),
@@ -133,37 +169,37 @@ function SingleSessionContent() {
   //   setSession(updatedSession);
   // }
 
-  async function deleteSession(id: number) {
-    if (!session) return;
+  // async function deleteSession(id: number) {
+  //   if (!session) return;
 
-    const access_token = localStorage.getItem("access_token");
+  //   const access_token = localStorage.getItem("access_token");
 
-    if (!access_token) {
-      console.error("Token de acesso não encontrado");
-      return;
-    }
+  //   if (!access_token) {
+  //     console.error("Token de acesso não encontrado");
+  //     return;
+  //   }
 
-    try {
-      const res = await fetch(`http://127.0.0.1:8000/api/edit-exercise/${id}`, {
-        method: 'DELETE',
-        headers: {
-          "Authrization" : `Bearer ${access_token}`
-        }
-      });
+  //   try {
+  //     const res = await fetch(`http://127.0.0.1:8000/api/edit-exercise/${id}`, {
+  //       method: 'DELETE',
+  //       headers: {
+  //         "Authrization" : `Bearer ${access_token}`
+  //       }
+  //     });
 
-      const data = await res.json();
+  //     const data = await res.json();
 
-      if (res.ok) {
-        console.log('Exercicio deletado com sucesso')
-        await fetchSessionDataAgain()
-      } else {
-        console.error('Erro ao deletar sessao', data.message)
-        return;
-      }
-    } catch (err) {
-      console.error('erro', err)
-    }
-  }
+  //     if (res.ok) {
+  //       console.log('Exercicio deletado com sucesso')
+  //       await fetchSessionDataAgain()
+  //     } else {
+  //       console.error('Erro ao deletar sessao', data.message)
+  //       return;
+  //     }
+  //   } catch (err) {
+  //     console.error('erro', err)
+  //   }
+  // }
 
 
 
@@ -270,6 +306,11 @@ function SingleSessionContent() {
       showProfile()
     });
   }
+
+  useEffect(() => {
+        testAuthentication(); 
+  }, []);
+
   
 
   
@@ -285,7 +326,14 @@ function SingleSessionContent() {
     icon.classList.toggle("fa-angle-up");
   }
 
-  if (!session) return <p>Sessão não encontrada</p>;
+  if (!session) return <p style={
+    {color: "white", 
+    position: "absolute", 
+    left: "50%", top: "50%", 
+    transform:"translate(-50%, -50%)", 
+    textAlign: "center"}}>
+      Desculpe... A sessão a qual está buscando não pôde ser encontrada
+    </p>;
 
   return (
     <div>
@@ -314,7 +362,7 @@ function SingleSessionContent() {
       </div>
       <br />
       <h2 className="exercises__title">Exercícios:</h2>
-      {session.exercises.length > 0 ? (
+      {session.exercises?.length > 0 ? (
         <ul className="exercises__list">
           {session.exercises.map((exercise, index) => (
             <li className="exercise" key={index}>
@@ -331,9 +379,9 @@ function SingleSessionContent() {
                   type="checkbox"
                 />
                 <i className="fas fa-basketball-ball bball-check"></i>
-                <button className="remove__exer" onClick={() => deleteExercise(index)}>
+                {/* <button className="remove__exer" onClick={() => deleteExercise(index)}>
                   <i className="fa-solid fa-trash-can"></i>
-                </button>
+                </button> */}
                 <button className="edit__exer">
                   <i className="fa-solid fa-pen-to-square"></i>
                 </button>
