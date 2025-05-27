@@ -22,9 +22,10 @@ function SingleSession() {
 function SingleSessionContent() {
   const { sessionId } = useParams<{ sessionId: string }>();
   const [session, setSession] = useState<Session | null>(null);
+  const [exercises, setExercises] = useState<Exercise[]>([]);
   const [exerciseName, setExerciseName] = useState<string>("");
   const [reps, setReps] = useState<string>("");
-  // const [makes, setMakes] = useState<string>("");
+  const [makes, setMakes] = useState<string>("");
   const { time, stopTimer } = useTimer(); 
   const navigate = useNavigate();
   const access_token = localStorage.getItem('access_token');
@@ -118,7 +119,8 @@ function SingleSessionContent() {
 
 
   async function addExercise(){
-    if (!session || !exerciseName.trim()) return;
+    console.log('id', sessionId)
+    if (!sessionId || !exerciseName.trim()) return;
 
     const access_token = localStorage.getItem("access_token");
 
@@ -134,7 +136,7 @@ function SingleSessionContent() {
         body: JSON.stringify({
           name: exerciseName,
           reps: Number(reps),
-          session_id: session.id
+          session_id: Number(sessionId)
         })
       });
 
@@ -144,6 +146,8 @@ function SingleSessionContent() {
         console.error('Erro ao criar exercicio', data)
         return;
       }
+
+      console.log('data', data)
 
       await fetchSessionDataAgain();
 
@@ -157,49 +161,84 @@ function SingleSessionContent() {
 
   }
 
-  // function deleteExercise(sessionId: string, exerciseIndex: number) {
-  //   if (!session) return;
-  //   const updatedExercises = session.exercises.filter((_, index) => index !== exerciseIndex);
-  //   const updatedSession = { ...session, exercises: updatedExercises };
+  async function listExercises(){
+    if (!sessionId) return;
 
-  //   const savedSessions: Session[] = JSON.parse(localStorage.getItem("sessions") || "[]");
-  //   const updatedSessions = savedSessions.map((s) => (s.id === sessionId ? updatedSession : s));
+    const access_token = localStorage.getItem("access_token");
 
-  //   localStorage.setItem("sessions", JSON.stringify(updatedSessions));
-  //   setSession(updatedSession);
-  // }
+    if (!access_token) {
+      console.error("Token de acesso não encontrado");
+      return;
+    }
 
-  // async function deleteSession(id: number) {
-  //   if (!session) return;
+    try {
+      const res = await fetch(`http://127.0.0.1:8000/api/list-exercises/?id_session=${Number(sessionId)}`, {
+        method: 'GET',
+        headers: authHeader
+      });
 
-  //   const access_token = localStorage.getItem("access_token");
 
-  //   if (!access_token) {
-  //     console.error("Token de acesso não encontrado");
-  //     return;
-  //   }
+      const data = await res.json();
 
-  //   try {
-  //     const res = await fetch(`http://127.0.0.1:8000/api/edit-exercise/${id}`, {
-  //       method: 'DELETE',
-  //       headers: {
-  //         "Authrization" : `Bearer ${access_token}`
-  //       }
-  //     });
+      if (!res.ok) {
+        console.error('Erro ao listar exercícios', data)
+        return;
+      }
 
-  //     const data = await res.json();
+      setExercises(data);
 
-  //     if (res.ok) {
-  //       console.log('Exercicio deletado com sucesso')
-  //       await fetchSessionDataAgain()
-  //     } else {
-  //       console.error('Erro ao deletar sessao', data.message)
-  //       return;
-  //     }
-  //   } catch (err) {
-  //     console.error('erro', err)
-  //   }
-  // }
+      // await fetchSessionDataAgain();
+
+      return data;
+
+    } catch (err) {
+      console.error('erro', err)
+    }
+  }
+
+  function deleteExercise(sessionId: string, exerciseIndex: number) {
+    if (!session) return;
+    const updatedExercises = session.exercises.filter((_, index) => index !== exerciseIndex);
+    const updatedSession = { ...session, exercises: updatedExercises };
+
+    const savedSessions: Session[] = JSON.parse(localStorage.getItem("sessions") || "[]");
+    const updatedSessions = savedSessions.map((s) => (s.id === sessionId ? updatedSession : s));
+
+    localStorage.setItem("sessions", JSON.stringify(updatedSessions));
+    setSession(updatedSession);
+  }
+
+  async function deleteSession(id: number) {
+    if (!session) return;
+
+    const access_token = localStorage.getItem("access_token");
+
+    if (!access_token) {
+      console.error("Token de acesso não encontrado");
+      return;
+    }
+
+    try {
+      const res = await fetch(`http://127.0.0.1:8000/api/edit-exercise/${id}`, {
+        method: 'DELETE',
+        headers: {
+          "Authrization" : `Bearer ${access_token}`
+        }
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        console.log('Exercicio deletado com sucesso')
+        await fetchSessionDataAgain()
+      } else {
+        console.error('Erro ao deletar sessao', data.message)
+        return;
+      }
+    } catch (err) {
+      console.error('erro', err)
+    }
+  }
 
 
 
@@ -309,6 +348,7 @@ function SingleSessionContent() {
 
   useEffect(() => {
         testAuthentication(); 
+        listExercises();
   }, []);
 
   
@@ -362,9 +402,9 @@ function SingleSessionContent() {
       </div>
       <br />
       <h2 className="exercises__title">Exercícios:</h2>
-      {session.exercises?.length > 0 ? (
+      {exercises.length > 0 ? (
         <ul className="exercises__list">
-          {session.exercises.map((exercise, index) => (
+          {exercises.map((exercise, index) => (
             <li className="exercise" key={index}>
               <div className="exercise__title" data-exercise-index={index}>
                 {exercise.name} - {exercise.reps} Reps | {exercise.makes || ''} acert. - {exercise.percentage+'%' || ''}
