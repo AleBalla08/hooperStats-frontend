@@ -71,8 +71,6 @@ function SingleSessionContent() {
         'Authorization' : `Bearer ${access_token}`
     }
 
-
-
   async function fetchSessionDataAgain() {
     if (!access_token || !sessionId) return;
     
@@ -82,7 +80,8 @@ function SingleSessionContent() {
   
     if (res.ok) {
       const data = await res.json();
-      setSession(data);
+      console.log('data', data)
+      setSession(data.session);
     }
   }
   
@@ -106,7 +105,7 @@ function SingleSessionContent() {
         }
 
         const data = await res.json()
-        setSession(data)
+        setSession(data.session)
       } catch (err) {
         console.error('Erro: ', err)
       }
@@ -116,6 +115,48 @@ function SingleSessionContent() {
 
 
   }, [sessionId, access_token])
+
+  async function deleteExercise(id: number) {
+    if (!session) return;
+
+    const access_token = localStorage.getItem("access_token");
+
+    if (!access_token) {
+      console.error("Token de acesso não encontrado");
+      return;
+    }
+
+    try {
+      const res = await fetch(`http://127.0.0.1:8000/api/edit-exercise?id=${id}`, {
+        method: 'DELETE',
+        headers: {
+          "Authorization" : `Bearer ${access_token}`
+        }
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        console.log('Exercicio deletado com sucesso')
+
+        setSession((prevSession) => {
+          if (!prevSession) return prevSession;
+
+          return {
+            ...prevSession,
+            exercises: prevSession.exercises.filter((exercise) => exercise.id !== id)
+          };
+        });
+
+        await fetchSessionDataAgain()
+      } else {
+        console.error('Erro ao deletar exercício', data.message)
+        return;
+      }
+    } catch (err) {
+      console.error('erro', err)
+    }
+  }
 
 
   async function addExercise(){
@@ -172,7 +213,7 @@ function SingleSessionContent() {
     }
 
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/list-exercises/?id_session=${Number(sessionId)}`, {
+      const res = await fetch(`http://127.0.0.1:8000/api/session/?id_session=${Number(sessionId)}`, {
         method: 'GET',
         headers: authHeader
       });
@@ -180,12 +221,14 @@ function SingleSessionContent() {
 
       const data = await res.json();
 
+      console.log('data: ', data)
+
       if (!res.ok) {
         console.error('Erro ao listar exercícios', data)
         return;
       }
 
-      setExercises(data);
+      setExercises(data.exercises);
 
       // await fetchSessionDataAgain();
 
@@ -195,52 +238,6 @@ function SingleSessionContent() {
       console.error('erro', err)
     }
   }
-
-  function deleteExercise(sessionId: string, exerciseIndex: number) {
-    if (!session) return;
-    const updatedExercises = session.exercises.filter((_, index) => index !== exerciseIndex);
-    const updatedSession = { ...session, exercises: updatedExercises };
-
-    const savedSessions: Session[] = JSON.parse(localStorage.getItem("sessions") || "[]");
-    const updatedSessions = savedSessions.map((s) => (s.id === sessionId ? updatedSession : s));
-
-    localStorage.setItem("sessions", JSON.stringify(updatedSessions));
-    setSession(updatedSession);
-  }
-
-  async function deleteSession(id: number) {
-    if (!session) return;
-
-    const access_token = localStorage.getItem("access_token");
-
-    if (!access_token) {
-      console.error("Token de acesso não encontrado");
-      return;
-    }
-
-    try {
-      const res = await fetch(`http://127.0.0.1:8000/api/edit-exercise/${id}`, {
-        method: 'DELETE',
-        headers: {
-          "Authrization" : `Bearer ${access_token}`
-        }
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        console.log('Exercicio deletado com sucesso')
-        await fetchSessionDataAgain()
-      } else {
-        console.error('Erro ao deletar sessao', data.message)
-        return;
-      }
-    } catch (err) {
-      console.error('erro', err)
-    }
-  }
-
-
 
   async function endExercise(sessionId: string, exerciseIndex: number) {
     if (!session) return;
@@ -419,11 +416,11 @@ function SingleSessionContent() {
                   type="checkbox"
                 />
                 <i className="fas fa-basketball-ball bball-check"></i>
-                {/* <button className="remove__exer" onClick={() => deleteExercise(index)}>
-                  <i className="fa-solid fa-trash-can"></i>
-                </button> */}
                 <button className="edit__exer">
                   <i className="fa-solid fa-pen-to-square"></i>
+                </button>
+                <button className='remove__exer' onClick={() => deleteExercise(session.id, index)}>
+                    <i className="fa-solid fa-trash-can"></i>
                 </button>
               </label>
             </li>
