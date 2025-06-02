@@ -116,47 +116,39 @@ function SingleSessionContent() {
 
   }, [sessionId, access_token])
 
-  async function deleteExercise(id: number) {
-    if (!session) return;
+  async function deleteExercise(sessionId: string, index: number) {
+    if (!sessionId) {console.log('Sessão não encontrada')};
 
     const access_token = localStorage.getItem("access_token");
+    const exercise = exercises[index];
 
-    if (!access_token) {
-      console.error("Token de acesso não encontrado");
-      return;
-    }
+    if (!access_token || !exercise) return;
 
     try {
-      const res = await fetch(`http://127.0.0.1:8000/api/edit-exercise?id=${id}`, {
+      const res = await fetch(`http://127.0.0.1:8000/api/edit-exercise/${exercise.id}`, {
         method: 'DELETE',
         headers: {
-          "Authorization" : `Bearer ${access_token}`
+          "Authorization": `Bearer ${access_token}`
         }
       });
 
       const data = await res.json();
 
       if (res.ok) {
-        console.log('Exercicio deletado com sucesso')
+        console.log("Exercício deletado com sucesso");
 
-        setSession((prevSession) => {
-          if (!prevSession) return prevSession;
+        setExercises((prevExercises) =>
+          prevExercises.filter((_, i) => i !== index)
+        );
 
-          return {
-            ...prevSession,
-            exercises: prevSession.exercises.filter((exercise) => exercise.id !== id)
-          };
-        });
-
-        await fetchSessionDataAgain()
       } else {
-        console.error('Erro ao deletar exercício', data.message)
-        return;
+        console.error("Erro ao deletar exercício", data.message);
       }
     } catch (err) {
-      console.error('erro', err)
+      console.error("Erro", err);
     }
   }
+
 
 
   async function addExercise(){
@@ -188,9 +180,16 @@ function SingleSessionContent() {
         return;
       }
 
-      console.log('data', data)
+      console.log('data', data.data)
 
-      await fetchSessionDataAgain();
+      setExercises((prevExercises) => [...prevExercises, data.data]);
+
+      setSession((prev) =>
+        prev ? {
+          ...prev,
+          exercises: [...(prev.exercises || []), data.data]
+        } : prev
+      );
 
       setExerciseName("");
       setReps("");
@@ -404,7 +403,7 @@ function SingleSessionContent() {
           {exercises.map((exercise, index) => (
             <li className="exercise" key={index}>
               <div className="exercise__title" data-exercise-index={index}>
-                {exercise.name} - {exercise.reps} Reps | {exercise.makes || ''} acert. - {exercise.percentage+'%' || ''}
+                {exercise.name} - {exercise.reps} Reps | {exercise.makes || '0'} acert. - {exercise.percentage != undefined ? exercise.percentage+'%' : '%'}
               </div>
 
               <label className="custom-checkbox">
