@@ -272,12 +272,13 @@ function SingleSessionContent() {
     exercise.makes = parsedMakes;
     exercise.percentage = parseFloat(((parsedMakes / exercise.reps) * 100).toFixed(2));
 
-    const savedSessions: Session[] = JSON.parse(localStorage.getItem("sessions") || "[]");
+    const res = await fetch(`http://127.0.0.1:8000/api/session/?id_session=${Number(sessionId)}`);
+    const data = await res.json();
+    const savedSessions: Session[] = data;
+
     const updatedSessions = savedSessions.map((s) => (s.id === sessionId ? updatedSession : s));
 
-    localStorage.setItem("sessions", JSON.stringify(updatedSessions));
-
-    setSession(updatedSession);
+    setSession(updatedSessions[updatedSessions.length - 1]);
   }
 
 
