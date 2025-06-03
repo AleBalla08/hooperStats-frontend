@@ -241,8 +241,8 @@ function SingleSessionContent() {
   async function endExercise(sessionId: string, exerciseIndex: number) {
     if (!session) return;
 
-    const updatedSession = { ...session };
-    const exercise = updatedSession.exercises[exerciseIndex];
+    const exercise = exercises[exerciseIndex]
+    console.log(exercise)
 
     if (!exercise) return;
 
@@ -272,13 +272,22 @@ function SingleSessionContent() {
     exercise.makes = parsedMakes;
     exercise.percentage = parseFloat(((parsedMakes / exercise.reps) * 100).toFixed(2));
 
-    const res = await fetch(`http://127.0.0.1:8000/api/session/?id_session=${Number(sessionId)}`);
+    const res = await fetch(`http://127.0.0.1:8000/api/get-done-sessions/?id_session=${Number(sessionId)}`, {
+      method: 'GET',
+      headers: authHeader});
+
     const data = await res.json();
-    const savedSessions: Session[] = data;
 
-    const updatedSessions = savedSessions.map((s) => (s.id === sessionId ? updatedSession : s));
+    if (!res.ok) {
+      console.error('ERRO')
+      return;
+    }
 
-    setSession(updatedSessions[updatedSessions.length - 1]);
+    console.log(data, 'sscsadgvds')
+
+    // const updatedSessions = data.map((s) => (s.id === sessionId ? updatedSession : s));
+
+    // setSession(updatedSessions[updatedSessions.length - 1]);
   }
 
 
