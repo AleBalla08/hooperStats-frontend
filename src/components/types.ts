@@ -10,7 +10,7 @@ export interface Exercise {
   name: string;
   reps: number;
   makes: number;
-  percentage: number;
+  accuracy: number;
 }
 
 export interface Session {

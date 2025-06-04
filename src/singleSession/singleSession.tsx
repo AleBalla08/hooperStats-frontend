@@ -23,6 +23,7 @@ function SingleSessionContent() {
   const { sessionId } = useParams<{ sessionId: string }>();
   const [session, setSession] = useState<Session | null>(null);
   const [exercises, setExercises] = useState<Exercise[]>([]);
+  const [exercise, setExercise] = useState<Exercise>();
   const [exerciseName, setExerciseName] = useState<string>("");
   const [reps, setReps] = useState<string>("");
   const [makes, setMakes] = useState<string>("");
@@ -270,24 +271,24 @@ function SingleSessionContent() {
 
     exercise.checked = true;
     exercise.makes = parsedMakes;
-    exercise.percentage = parseFloat(((parsedMakes / exercise.reps) * 100).toFixed(2));
+    exercise.accuracy = parseFloat(((parsedMakes / exercise.reps) * 100).toFixed(2));
 
-    const res = await fetch(`http://127.0.0.1:8000/api/get-done-sessions/?id_session=${Number(sessionId)}`, {
-      method: 'GET',
-      headers: authHeader});
+    const res = await fetch(`http://127.0.0.1:8000/api/edit-exercise/${exercise.id}`, {
+      method: 'PATCH',
+      headers: authHeader,
+      body: JSON.stringify({
+        'makes': parsedMakes
+      })});
 
     const data = await res.json();
+    console.log(data.exer)
 
     if (!res.ok) {
       console.error('ERRO')
       return;
     }
 
-    console.log(data, 'sscsadgvds')
-
-    // const updatedSessions = data.map((s) => (s.id === sessionId ? updatedSession : s));
-
-    // setSession(updatedSessions[updatedSessions.length - 1]);
+    setExercise(data.exer);
   }
 
 
@@ -413,7 +414,7 @@ function SingleSessionContent() {
           {exercises.map((exercise, index) => (
             <li className="exercise" key={index}>
               <div className="exercise__title" data-exercise-index={index}>
-                {exercise.name} - {exercise.reps} Reps | {exercise.makes || '0'} acert. - {exercise.percentage != undefined ? exercise.percentage+'%' : '%'}
+                {exercise.name} - {exercise.reps} Reps | {exercise.makes || '0'} acert. - { exercise.accuracy +'%' || '%'}
               </div>
 
               <label className="custom-checkbox">
