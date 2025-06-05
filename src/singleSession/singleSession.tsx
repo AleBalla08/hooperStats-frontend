@@ -31,7 +31,7 @@ function SingleSessionContent() {
   const navigate = useNavigate();
   const access_token = localStorage.getItem('access_token');
 
-  // teste requisicao abaixo
+  // teste requisicao abaixeo
     async function testAuthentication(){
         const token = localStorage.getItem('access_token');
         const res = await fetch("http://127.0.0.1:8000/api/protected/", {
@@ -292,7 +292,7 @@ function SingleSessionContent() {
   }
 
 
-  function endSession() {
+  async function endSession(sessionId : string) {
     if (!session) return;
   
     stopTimer();
@@ -303,49 +303,34 @@ function SingleSessionContent() {
     } else {
       console.warn("Botão de parar timer não encontrado.");
     }
-  
-    const doneSessions: Session[] = JSON.parse(localStorage.getItem("doneSessions") || "[]");
-  
-    const newSession: Session = {
-      id: session.id,
-      name: session.name,
-      exercises: session.exercises.map((exercise) => ({
-        ...exercise,
-        checked: true, 
-      })),
-      duration: time,
-    };
-  
-    doneSessions.push(newSession);
-    localStorage.setItem("doneSessions", JSON.stringify(doneSessions));
 
-    const resetSession: Session = {
-      ...session,
-      exercises: session.exercises.map((exercise) => ({
-        ...exercise,
-        makes: 0,
-        percentage: 0,
-        checked: false,
-      })),
-    };
-  
-    const storedSessions: Session[] = JSON.parse(localStorage.getItem("sessions") || "[]");
-  
-    const updatedSessions = storedSessions.map((s) => (s.id === session.id ? resetSession : s));
-  
-    localStorage.setItem("sessions", JSON.stringify(updatedSessions));
-  
-    setSession(resetSession);
-  
-    console.log("Sessão finalizada e salva em 'doneSessions':", newSession);
-    
+    console.log('time', time)
+
+    const response = await fetch(`http://127.0.0.1:8000/api/end-session/${sessionId}`, {
+      method: 'PATCH',
+      headers: authHeader,
+      body: JSON.stringify({
+        'duration': time
+      })
+    });
+
+    if (!response.ok){
+      Swal.fire({
+        title: "Erro ao salvar sessão",
+        icon: "error",
+        confirmButtonText: "OK",
+      });
+      return;
+    }
+
+    const data = await response.json();
     
     const showProfile = ()=>{
             navigate(`/profile`)
     }
 
     Swal.fire({
-      title: "Sessão salva com sucesso!",
+      title: data.message,
       icon: "success",
       confirmButtonText: "OK",
     }).then(() => {
@@ -353,14 +338,11 @@ function SingleSessionContent() {
     });
   }
 
+
   useEffect(() => {
         testAuthentication(); 
         listExercises();
   }, []);
-
-  
-
-  
 
   function toggleForm() {
     const form = document.querySelector(".form__exercise");
@@ -435,7 +417,7 @@ function SingleSessionContent() {
               </label>
             </li>
           ))}
-          <button className="end-session" onClick={endSession}>
+          <button className="end-session" onClick={() => endSession(session.id)}>
             Finalizar Sessão
           </button>
         </ul>
