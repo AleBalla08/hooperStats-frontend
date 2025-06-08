@@ -1,11 +1,12 @@
 import '../comps_styles/appStyles.css'
 import { useEffect, useState } from "react";
 import TopMenu from './topMenu';
-import { useNavigate } from 'react-router-dom';
+import { Session, useNavigate } from 'react-router-dom';
 
 function DoneSessions(){
-    const [doneSessions, setDoneSessions] = useState<any | null>(null);
+    const [doneSessions, setDoneSessions] = useState<Session| null>(null);
     const navigate = useNavigate();
+    const access_token = localStorage.getItem('access_token');
 
     async function testAuthentication(){
         const token = localStorage.getItem('access_token');
@@ -42,22 +43,45 @@ function DoneSessions(){
         }
     }
 
+    async function getDoneSessions() {
+        const res = await fetch(`http://127.0.0.1:8000/api/get-done-sessions/`, {
+            method: 'GET',
+            headers: {
+                'Content-Type' : 'application/json',
+                'Authorization' : `Bearer ${access_token}`
+            }
+        })
+
+        if (!res.ok) {
+            return;
+        }
+
+        const data = await res.json();
+        setDoneSessions(data);
+    }
+
     useEffect(() => {
-        const getDoneSessions = (): any | null => {
-            const storedSessions = localStorage.getItem('doneSessions');
-
-            if (!storedSessions) return null;
-            return JSON.parse(storedSessions);
-        };
-
-        setDoneSessions(getDoneSessions());
+        getDoneSessions();
         testAuthentication();
     }, []);
 
 
     const clearDoneSessions = ()=>{
-        localStorage.removeItem('doneSessions')
-        setDoneSessions([])
+        
+        fetch ('http://127.0.0.1:8000/api/clear-done-sessions/', {
+            method: 'DELETE',
+            headers: {
+                'Content-Type' : 'application/json',
+                'Authorization' : `Bearer ${access_token}`
+            },
+            body: JSON.stringify({ 'ids': doneSessions.map(e => e.id) })
+        })
+        .then(res => res.json())
+        .then(data => {
+            setDoneSessions([]);
+            console.log('Deleted:', data);
+        })
+        .catch(err => console.error('Error:', err));
     }
 
 
@@ -67,7 +91,7 @@ function DoneSessions(){
             <h3 className='done-sessions_title'>Treinos</h3>
             <h5 className='done-sessions-subtitle'>Treinos concluídos aparecerão aqui</h5>
             <ul className='done-sessions_list'>
-                {doneSessions && doneSessions.map((session: any, index: number) => (
+                {doneSessions && doneSessions.map((session: Session, index: number) => (
                     <li className='donse-sessions_item' key={index}>{session.name} - {session.duration} segundos</li>
                 ))}
             </ul>
