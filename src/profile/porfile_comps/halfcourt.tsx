@@ -1,5 +1,24 @@
+async function getDoneSessions() {
+  const access_token = localStorage.getItem('access_token');
+
+  const resposta = await fetch('http://127.0.0.1:8000/api/get-done-sessions/', {
+    method: 'GET',
+    headers: {
+        'Content-Type' : 'application/json',
+        'Authorization' : `Bearer ${access_token}`
+    }
+  });
+
+  const data = await resposta.json();
+  
+  return data;
+}
 
 export default function HalfCourt() {
+
+  const data = getDoneSessions();
+
+
 
   const shotData = [
     { position: "corner-L", percentage: 45 },
