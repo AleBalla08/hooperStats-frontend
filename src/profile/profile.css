@@ -141,8 +141,8 @@ dashboard */
     align-items: center;
 }
 
-.corner-L { top: 75%; left: 0%; }
-.corner-R { top: 75%; right: 0%; }
+.midrange-l { top: 75%; left: 0%; }
+.midrange-r { top: 75%; right: 0%; }
 .fortyfive-L { top: 25%; left: 8%; }
 .fortyfive-R { top: 25%; right: 8%; }
 .center { top: 9%; left: 50%; transform: translate(-50%, -50%); }

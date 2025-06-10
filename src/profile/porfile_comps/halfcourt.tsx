@@ -1,3 +1,5 @@
+import { Session } from "../../components/types";
+
 async function getDoneSessions() {
   const access_token = localStorage.getItem('access_token');
 
@@ -15,41 +17,71 @@ async function getDoneSessions() {
 }
 
 export default function HalfCourt() {
+  const getDones = getDoneSessions();
+  
+  getDones.then(sessions => {
+    console.log(sessions)
+    const positionData:any = {};
+    
+    sessions.forEach(session => {
+      session.exercises.forEach(exer => {
+        const pos = exer.position;
+        const acc = exer.accuracy;
 
-  const data = getDoneSessions();
+        console.log(pos, acc)
 
+        if (!positionData[pos]) {
+          positionData[pos] = { total: 0, count: 0 };
+        }
 
+        positionData[pos].total += acc;
+        positionData[pos].count += 1;
+      });
+    });
 
-  const shotData = [
-    { position: "corner-L", percentage: 45 },
-    { position: "corner-R", percentage: 50 },
-    { position: "fortyfive-L", percentage: 38 },
-    { position: "fortyfive-R", percentage: 42 },
-    { position: "center", percentage: 47 },
-    { position: "two-corner-L", percentage: 55 },
-    { position: "two-corner-R", percentage: 53 },
-    { position: "freethrow", percentage: 90 },
-  ];
+    const averages:any = {};
 
-  const getCircleColor = (percentage: number) => {
-    if (percentage >= 60) return "#A31D1D";
-    if (percentage >= 50) return "#FFB433";
-    if (percentage >= 40) return "#578FCA";
-    return "#8C8C8C";
-  };
+    for (const pos in positionData){
+      const {total, count} = positionData[pos];
+      averages[pos] = (total / count).toFixed(2);
+    }
 
-  const shotElements = shotData.map((shot) => (
-    <div
-      key={shot.position}
-      className={`shot-position ${shot.position}`} 
-      style={{
-        backgroundColor: getCircleColor(shot.percentage),
-        color: "white",
-      }}
-    >
-      {shot.percentage}%
-    </div>
-  ));
+    console.log('averg', averages)
+
+    const shotData = [
+      { position: "midrange-l", percentage: 45 },
+      { position: "midrange-r", percentage: 50 },
+      { position: "fortyfive-L", percentage: 38 },
+      { position: "fortyfive-R", percentage: 42 },
+      { position: "center", percentage: 47 },
+      { position: "two-corner-L", percentage: 55 },
+      { position: "two-corner-R", percentage: 53 },
+      { position: "freethrow", percentage: 90 },
+    ];
+
+    const getCircleColor = (percentage: number) => {
+      if (percentage >= 60) return "#A31D1D";
+      if (percentage >= 50) return "#FFB433";
+      if (percentage >= 40) return "#578FCA";
+      return "#8C8C8C";
+    };
+
+    const shotElements = shotData.map((shot) => (
+      <div
+        key={shot.position}
+        className={`shot-position ${shot.position}`} 
+        style={{
+          backgroundColor: getCircleColor(shot.percentage),
+          color: "white",
+        }}
+      >
+        {shot.percentage}%
+      </div>
+    ));
+    
+  })
+
+  
 
   return (
     <>

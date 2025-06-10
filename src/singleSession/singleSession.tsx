@@ -391,14 +391,15 @@ function SingleSessionContent() {
           onChange={(e) => {setExercisePosition(e.target.value)}}
           required
         >
-          <option value="midrange-r">Media Distância - Direita</option> 
+          <option value="midrange-r">Media Distância - Direita</option>
           <option value="midrange-l">Media Distância - Esquerda</option>
-          <option value="midrange-c" selected>Media Distância - Centro</option>
-          <option value="3pointer-c">3 Pontos - Centro</option>
-          <option value="3pointer-l">3 Pontos - Esquerda</option>
-          <option value="3pointer-r">3 Pontos - Direita</option>
-          <option value="3pointer-45l">3 Pontos - 45 Esquerda</option>
-          <option value="3pointer-45r">3 Pontos - 45 Direita</option>
+          <option value="freethrow" selected>Media Distância - Centro</option>
+          <option value="center">3 Pontos - Centro</option>
+          <option value="corner-L">3 Pontos - Esquerda</option>
+          <option value="corner-R">3 Pontos - Direita</option>
+          <option value="fortyfive-L">3 Pontos - 45 Esquerda</option>
+          <option value="fortyfive-R">3 Pontos - 45 Direita</option>
+
         </select>
         <input
           type="number"
