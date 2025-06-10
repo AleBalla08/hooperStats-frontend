@@ -8,6 +8,7 @@ export interface Exercise {
   id: number,
   checked: boolean,
   name: string;
+  position: string;
   reps: number;
   makes: number;
   accuracy: number;

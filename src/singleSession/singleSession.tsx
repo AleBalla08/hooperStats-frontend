@@ -25,6 +25,7 @@ function SingleSessionContent() {
   const [exercises, setExercises] = useState<Exercise[]>([]);
   const [exercise, setExercise] = useState<Exercise>();
   const [exerciseName, setExerciseName] = useState<string>("");
+  const [exercisePosition, setExercisePosition] = useState<string>("");
   const [reps, setReps] = useState<string>("");
   const [makes, setMakes] = useState<string>("");
   const { time, stopTimer } = useTimer(); 
@@ -169,6 +170,7 @@ function SingleSessionContent() {
         headers: authHeader,
         body: JSON.stringify({
           name: exerciseName,
+          position: exercisePosition,
           reps: Number(reps),
           session_id: Number(sessionId)
         })
@@ -193,6 +195,7 @@ function SingleSessionContent() {
       );
 
       setExerciseName("");
+      setExercisePosition("");
       setReps("");
       setMakes("");
 
@@ -381,6 +384,22 @@ function SingleSessionContent() {
           value={exerciseName}
           onChange={(e) => setExerciseName(e.target.value)}
         />
+        <select 
+          name="exercise-position" 
+          id="exercise-position" 
+          value={exercisePosition}
+          onChange={(e) => {setExercisePosition(e.target.value)}}
+          required
+        >
+          <option value="midrange-r">Media Distância - Direita</option> 
+          <option value="midrange-l">Media Distância - Esquerda</option>
+          <option value="midrange-c" selected>Media Distância - Centro</option>
+          <option value="3pointer-c">3 Pontos - Centro</option>
+          <option value="3pointer-l">3 Pontos - Esquerda</option>
+          <option value="3pointer-r">3 Pontos - Direita</option>
+          <option value="3pointer-45l">3 Pontos - 45 Esquerda</option>
+          <option value="3pointer-45r">3 Pontos - 45 Direita</option>
+        </select>
         <input
           type="number"
           placeholder="Repetições"

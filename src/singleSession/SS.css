@@ -87,6 +87,17 @@ body{
     border-radius: 3px;
     outline: none;
     border: 1px solid;
+    
+}
+
+#exercise-position{
+    padding: 0.3em 1.2em;
+    border-radius: 3px;
+    outline: none;
+    border: 1px solid;
+    background-color: var(--branco);
+    
+    
 }
 
 .form__exercise button{
