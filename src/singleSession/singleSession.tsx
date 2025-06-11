@@ -170,7 +170,7 @@ function SingleSessionContent() {
         headers: authHeader,
         body: JSON.stringify({
           name: exerciseName,
-          position: exercisePosition,
+          position: exercisePosition ? exercisePosition : 'midrange-r',
           reps: Number(reps),
           session_id: Number(sessionId)
         })
@@ -267,6 +267,8 @@ function SingleSessionContent() {
     if (makes === undefined) return;
 
     const parsedMakes = Number(makes);
+
+    console.log('parsed', parsedMakes)
     if (isNaN(parsedMakes) || parsedMakes < 0 || parsedMakes > exercise.reps) {
       Swal.fire("Erro!", "Por favor, insira um número válido.", "error");
       return;
@@ -307,6 +309,16 @@ function SingleSessionContent() {
       console.warn("Botão de parar timer não encontrado.");
     }
 
+    const finalizedExercises = exercises
+      .filter(ex => ex.checked)
+      .map(ex => ({
+        id: ex.id,
+        reps: ex.reps,
+        makes: ex.makes,
+        accuracy: ex.accuracy
+      }))
+
+    console.log('finalizesExer', finalizedExercises)
     console.log('time', time)
 
     const response = await fetch(`http://127.0.0.1:8000/api/end-session/${sessionId}`, {
@@ -391,15 +403,15 @@ function SingleSessionContent() {
           onChange={(e) => {setExercisePosition(e.target.value)}}
           required
         >
-          <option value="midrange-r">Media Distância - Direita</option>
+
+          <option value="midrange-r">Media Distância - Direita</option> 
           <option value="midrange-l">Media Distância - Esquerda</option>
-          <option value="freethrow" selected>Media Distância - Centro</option>
+          <option value="freethrow">Media Distância - Centro</option>
           <option value="center">3 Pontos - Centro</option>
           <option value="corner-L">3 Pontos - Esquerda</option>
           <option value="corner-R">3 Pontos - Direita</option>
           <option value="fortyfive-L">3 Pontos - 45 Esquerda</option>
           <option value="fortyfive-R">3 Pontos - 45 Direita</option>
-
         </select>
         <input
           type="number"
